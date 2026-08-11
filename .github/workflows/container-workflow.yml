@@ -1,0 +1,63 @@
+name: production
+
+permissions:
+  contents: write
+  packages: write
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      pipeline_mode:
+        description: pipeline mode
+        type: choice
+        required: true
+        default: build_and_push
+        options:
+          - build_and_push
+          - build_only
+      container_registry:
+        description: pipeline mode
+        type: choice
+        required: true
+        default: github
+        options:
+          - dockerhub
+          - github
+      deploy:
+        description: deploy?
+        type: boolean
+      gitops_engine:
+        description: gitops engine?
+        type: choice
+        required: true
+        default: argocd
+        options:
+          - argocd
+          - fluxcd
+
+jobs:
+  pipeline:
+    uses: glauciolabs/core-pipeline/.github/actions/containers/${{ inputs.pipeline_mode || 'build_and_push' }}.yml@feat/new-pipeline
+    with:
+      archetype: containers
+      pipeline_mode: ${{ inputs.pipeline_mode || 'build_and_push' }}
+      gitops_engine: ${{ inputs.gitops_engine || 'argocd' }}
+      deploy: ${{ inputs.deploy || 'false' }}
+      argocd_deployment_mode: kustomize
+      release_policy: always
+      release_notes_file: RELEASE_NOTES.md
+      kustomization_overlay: false
+    secrets:
+      REGISTRY: ${{ inputs.container_registry || 'github' }}
+      REGISTRY_USERNAME: ${{ github.repository_owner }}
+      REGISTRY_PASSWORD: ${{ github.token }}
+      GIT_REGISTRY_TOKEN: ${{ secrets.GIT_REGISTRY_TOKEN }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+      ARGOCD_TOKEN: ${{ secrets.ARGOCD_TOKEN }}
+      GITOPS_SSH_PRIVATE_KEY: ${{ secrets.GITOPS_SSH_PRIVATE_KEY }}
+      CLUSTER_DEVELOP: ${{ secrets.CLUSTER_DEVELOP }}
+      CLUSTER_PRODUCTION: ${{ secrets.CLUSTER_PRODUCTION }}

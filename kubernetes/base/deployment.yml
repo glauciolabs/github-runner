@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-runner
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: github-runner
+  template:
+    metadata:
+      labels:
+        app: github-runner
+    spec:
+      hostNetwork: true
+      #dnsPolicy: "None"
+      #dnsConfig:
+      #  nameservers:
+      #    - 10.43.0.10
+      #    - 8.8.8.8
+      containers:
+      - name: github-runner
+        image: ghcr.io/glauciolabs/github-runner:v0.1.0
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: GITHUB_URL
+          valueFrom:
+            secretKeyRef:
+              name: github-runner-secrets
+              key: GITHUB_URL
+        - name: RUNNER_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-runner-secrets
+              key: RUNNER_TOKEN
+        - name: RUNNER_GROUP
+          valueFrom:
+            secretKeyRef:
+              name: github-runner-secrets
+              key: RUNNER_GROUP
+        - name: RUNNER_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: dotnet
+          value: "v10.0.110"
+        - name: openjdk
+          value: "v25.0.3"
+        - name: nodejs
+          value: "v26.6.0"
+        - name: npm
+          value: "v11.18.0"
+        - name: yarn
+          value: "v1.22.22"
+        - name: snyk-cli
+          value: "v1.1306.3"
+        - name: argocd-cli
+          value: "v3.5.0"
+        - name: maven
+          value: "v3.9.12"
+        - name: kubectl
+          value: "v1.36.3"
+        - name: helm
+          value: "v4.2.3"
+        - name: golang-go
+          value: "v1.26.0"
+        - name: python
+          value: "v3.14.4"
+        - name: poetry
+          value: "v2.4.1"
+        - name: trivy
+          value: "0.73.0"
+        resources:
+          limits:
+            cpu: "400m"
+            memory: "2048Mi"
+          requests:
+            cpu: "100m"
+            memory: "256Mi"

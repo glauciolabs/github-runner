@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: github-runner-production
+  namespace: argocd
+spec:
+  project: github-runner
+  source:
+    repoURL: https://github.com/glauciolabs/github-runner
+    targetRevision: production
+    path: kubernetes/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: github-runner
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
