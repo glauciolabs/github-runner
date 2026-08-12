@@ -28,6 +28,8 @@ on:
           - github
       deploy:
         description: deploy?
+        required: true
+        default: true
         type: boolean
       gitops_engine:
         description: gitops engine?
@@ -40,18 +42,18 @@ on:
 
 jobs:
   pipeline:
-    uses: glauciolabs/core-pipeline/.github/actions/containers/${{ inputs.pipeline_mode || 'build_and_push' }}.yml@feat/new-pipeline
+    uses: glauciolabs/core-pipeline/actions/containers/${{ inputs.pipeline_mode }}.yml@feat/new-pipeline
     with:
-      archetype: containers
-      pipeline_mode: ${{ inputs.pipeline_mode || 'build_and_push' }}
-      gitops_engine: ${{ inputs.gitops_engine || 'argocd' }}
-      deploy: ${{ inputs.deploy || 'false' }}
+      workflow_type: containers
+      pipeline_mode: ${{ inputs.pipeline_mode }}
+      gitops_engine: ${{ inputs.gitops_engine }}
+      deploy: ${{ inputs.deploy }}
       argocd_deployment_mode: kustomize
       release_policy: always
       release_notes_file: RELEASE_NOTES.md
       kustomization_overlay: false
     secrets:
-      REGISTRY: ${{ inputs.container_registry || 'github' }}
+      REGISTRY: ${{ inputs.container_registry }}
       REGISTRY_USERNAME: ${{ github.repository_owner }}
       REGISTRY_PASSWORD: ${{ github.token }}
       GIT_REGISTRY_TOKEN: ${{ secrets.GIT_REGISTRY_TOKEN }}
