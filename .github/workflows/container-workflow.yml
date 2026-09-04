@@ -46,11 +46,14 @@ jobs:
     with:
       workflow_type: containers
       pipeline_mode: ${{ inputs.pipeline_mode }}
+      container_registry: ${{ inputs.container_registry }}
       gitops_engine: ${{ inputs.gitops_engine }}
       deploy: ${{ inputs.deploy }}
       argocd_deployment_mode: kustomize
       kustomization_overlay: false
     secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       REGISTRY: ${{ inputs.container_registry }}
       REGISTRY_USERNAME: ${{ github.repository_owner }}
       REGISTRY_PASSWORD: ${{ github.token }}
