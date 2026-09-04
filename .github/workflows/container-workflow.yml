@@ -48,6 +48,8 @@ jobs:
     uses: glauciolabs/core-pipeline/.github/workflows/core-pipeline.yml@feat/new-pipeline
     with:
       workflow_type: containers
+      docker_context: 'container'
+      dockerfile_path: 'container/Dockerfile'
       pipeline_mode: ${{ inputs.build_mode }}
       container_registry: ${{ inputs.container_registry }}
       gitops_engine: ${{ inputs.gitops_engine }}
