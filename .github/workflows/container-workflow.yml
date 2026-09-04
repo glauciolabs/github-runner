@@ -49,8 +49,6 @@ jobs:
       gitops_engine: ${{ inputs.gitops_engine }}
       deploy: ${{ inputs.deploy }}
       argocd_deployment_mode: kustomize
-      release_policy: always
-      release_notes_file: RELEASE_NOTES.md
       kustomization_overlay: false
     secrets:
       REGISTRY: ${{ inputs.container_registry }}
