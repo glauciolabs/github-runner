@@ -42,7 +42,7 @@ on:
 
 jobs:
   pipeline:
-    uses: glauciolabs/core-pipeline/actions/containers/${{ inputs.pipeline_mode }}.yml@feat/new-pipeline
+    uses: glauciolabs/core-pipeline/.github/workflows/core-pipeline.yml@feat/new-pipeline
     with:
       workflow_type: containers
       pipeline_mode: ${{ inputs.pipeline_mode }}
