@@ -10,8 +10,8 @@ on:
       - master
   workflow_dispatch:
     inputs:
-      pipeline_mode:
-        description: pipeline mode
+      build_mode:
+        description: build mode
         type: choice
         required: true
         default: build_and_push
@@ -19,7 +19,7 @@ on:
           - build_and_push
           - build_only
       container_registry:
-        description: pipeline mode
+        description: container registry
         type: choice
         required: true
         default: github
@@ -45,7 +45,7 @@ jobs:
     uses: glauciolabs/core-pipeline/.github/workflows/core-pipeline.yml@feat/new-pipeline
     with:
       workflow_type: containers
-      pipeline_mode: ${{ inputs.pipeline_mode }}
+      pipeline_mode: ${{ inputs.build_mode }}
       container_registry: ${{ inputs.container_registry }}
       gitops_engine: ${{ inputs.gitops_engine }}
       deploy: ${{ inputs.deploy }}
