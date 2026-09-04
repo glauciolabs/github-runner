@@ -51,7 +51,6 @@ jobs:
       docker_context: 'container'
       dockerfile_path: 'container/Dockerfile'
       docker_platforms: 'linux/amd64,linux/arm64'
-      snyk_fail_on_issues: 'false'
       pipeline_mode: ${{ inputs.build_mode }}
       container_registry: ${{ inputs.container_registry }}
       gitops_engine: ${{ inputs.gitops_engine }}
