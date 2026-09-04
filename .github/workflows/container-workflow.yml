@@ -59,7 +59,7 @@ jobs:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       REGISTRY: ${{ inputs.container_registry }}
       REGISTRY_USERNAME: ${{ github.repository_owner }}
-      REGISTRY_PASSWORD: ${{ github.token }}
+      REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
       GIT_REGISTRY_TOKEN: ${{ secrets.GIT_REGISTRY_TOKEN }}
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
