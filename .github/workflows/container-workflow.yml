@@ -53,10 +53,10 @@ jobs:
       docker_context: 'container'
       dockerfile_path: 'container/Dockerfile'
       docker_platforms: 'linux/amd64,linux/arm64'
-      pipeline_mode: ${{ inputs.build_mode }}
-      container_registry: ${{ inputs.container_registry }}
-      gitops_engine: ${{ inputs.gitops_engine }}
-      deploy: ${{ inputs.deploy }}
+      pipeline_mode: ${{ inputs.build_mode || 'build_and_push' }}
+      container_registry: ${{ inputs.container_registry || 'github' }}
+      gitops_engine: ${{ inputs.gitops_engine || 'argocd' }}
+      deploy: ${{ inputs.deploy || true }}
       argocd_deployment_mode: kustomize
       kustomization_overlay: false
     secrets: inherit
