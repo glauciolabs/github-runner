@@ -12,6 +12,10 @@ spec:
       labels:
         app: github-runner
     spec:
+      imagePullSecrets:
+      - name: ghcr-secret
+      nodeSelector:
+        kubernetes.io/arch: amd64
       hostNetwork: true
       #dnsPolicy: "None"
       #dnsConfig:
@@ -20,7 +24,7 @@ spec:
       #    - 8.8.8.8
       containers:
       - name: github-runner
-        image: ghcr.io/glauciolabs/github-runner:v0.1.0
+        image: ghcr.io/glauciolabs/github-runner:v0.1.0-33023df-develop
         imagePullPolicy: IfNotPresent
         env:
         - name: GITHUB_URL
