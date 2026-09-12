@@ -12,6 +12,7 @@ on:
   push:
     branches:
       - master
+      - test
   workflow_dispatch:
     inputs:
       build_mode:
