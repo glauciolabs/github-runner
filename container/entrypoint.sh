@@ -29,6 +29,8 @@ if [[ "$RUNNER_TOKEN" == ghp_* ]] || [[ "$RUNNER_TOKEN" == github_pat_* ]]; then
     exit 1
   fi
   AUTH_ARG="--token $REG_TOKEN"
+else
+  AUTH_ARG="--token $RUNNER_TOKEN"
 fi
 
 cleanup() {

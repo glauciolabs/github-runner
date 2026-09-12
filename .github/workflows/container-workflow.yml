@@ -58,16 +58,4 @@ jobs:
       deploy: ${{ inputs.deploy }}
       argocd_deployment_mode: kustomize
       kustomization_overlay: false
-    secrets:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-      REGISTRY: ${{ inputs.container_registry }}
-      REGISTRY_USERNAME: ${{ github.repository_owner }}
-      REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-      GIT_REGISTRY_TOKEN: ${{ secrets.GIT_REGISTRY_TOKEN }}
-      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
-      ARGOCD_TOKEN: ${{ secrets.ARGOCD_TOKEN }}
-      GITOPS_SSH_PRIVATE_KEY: ${{ secrets.GITOPS_SSH_PRIVATE_KEY }}
-      CLUSTER_DEVELOP: ${{ secrets.CLUSTER_DEVELOP }}
-      CLUSTER_PRODUCTION: ${{ secrets.CLUSTER_PRODUCTION }}
+    secrets: inherit
