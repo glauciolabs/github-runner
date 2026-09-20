@@ -50,7 +50,7 @@ spec:
         - name: RUNNER_NAME
           valueFrom:
             fieldRef:
-              fieldPath: metadata.name
+              fieldPath: spec.nodeName
         - name: dotnet
           value: "v10.0.110"
         - name: openjdk

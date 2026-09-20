@@ -1,104 +1,121 @@
-# Kubernetes GitHub Actions Self-Hosted Runner
+# GitHub Self-Hosted Runner for Kubernetes
 
-A multi-architecture (`linux/amd64`, `linux/arm64`) containerized GitHub Actions Self-Hosted Runner designed for Kubernetes deployments.
-
-## Features
-
-- **Multi-Architecture Support**: Built for both `x86_64` (`amd64`) and `arm64` architectures.
-- **Dynamic Registration & Graceful Cleanup**:
-  - Automatically registers with GitHub Actions on startup.
-  - Intercepts termination signals (`SIGTERM`, `SIGINT`, `EXIT`) via Bash `trap` to cleanly deregister and remove the runner from GitHub when the Pod or container stops.
-- **Pre-installed Tooling**:
-  - **Runtimes & SDKs**: .NET 10, Node.js 26 (Yarn), OpenJDK 25, Go 1.26, Python 3 (Poetry).
-  - **DevOps & Security CLI**: `kubectl`, `helm`, `argocd`, `trivy`, `snyk`.
+This repository contains the container image source, entrypoint scripts, and Kubernetes manifests for deploying auto-scaling **GitHub Self-Hosted Runners** on Kubernetes clusters.
 
 ---
 
-## Environment Variables
+## 🚀 Authentication & Registration Mechanics
 
-| Variable | Required | Description | Default |
-| :--- | :---: | :--- | :--- |
-| `GITHUB_URL` | **Yes** | Target GitHub Organization or Repository URL (e.g., `https://github.com/glauciolabs`) | - |
-| `RUNNER_TOKEN` | **Yes** | GitHub Actions Runner Registration Token | - |
-| `RUNNER_NAME` | No | Custom name for the runner instance | `linux-runner` (or Pod name in Kubernetes) |
-| `RUNNER_GROUP` | No | Target Runner Group in GitHub | `Default` |
+The container entrypoint (`entrypoint.sh`) supports **two authentication modes**:
+
+1. **Personal Access Token (PAT) — Recommended for Production:**
+   - When provided with a PAT (`ghp_...` or `github_pat_...`), the runner automatically requests a fresh, short-lived registration token from the GitHub REST API every time a pod starts or restarts.
+   - **No 1-hour expiration limit!** Pods can restart indefinitely without manual intervention.
+
+2. **Temporary Registration Token:**
+   - Single-use token generated from GitHub UI or `gh` CLI. Valid for 60 minutes.
 
 ---
 
-## Getting Started
+## 🔑 How to Create a Personal Access Token (PAT)
 
-### 1. Docker (Local Testing)
+### Method 1: Via GitHub Web UI
 
-Build and run locally with Docker:
+1. Navigate to GitHub and click your profile picture in the top-right corner -> **Settings**.
+2. In the left sidebar, scroll down to **Developer settings**.
+3. Select **Personal access tokens** -> **Tokens (classic)**.
+4. Click **Generate new token** -> **Generate new token (classic)**.
+5. Provide a descriptive name (e.g., `k8s-github-runner`).
+6. Select the required **Scopes**:
+   - **`admin:org`**: Required for organization-level runners (`https://github.com/glauciolabs`).
+   - **`repo`**: Required for repository-level runners (`https://github.com/glauciolabs/<repo>`).
+   - **`write:packages` / `read:packages`**: Required if pulling or pushing images to GitHub Container Registry (`ghcr.io`).
+7. Click **Generate token** and copy the generated key (`ghp_xxxxxxxxxxxx`).
+
+---
+
+### Method 2: Token Management via `gh` CLI
+
+Verify your active GitHub authentication and permissions:
 
 ```bash
-# Build the image
-docker build -t github-runner:latest -f container/Dockerfile container/
-
-# Run the container
-docker run -d --network=host \
-  -e GITHUB_URL="https://github.com/your-org" \
-  -e RUNNER_TOKEN="YOUR_REGISTRATION_TOKEN" \
-  -e RUNNER_NAME="local-runner" \
-  --name github-runner \
-  github-runner:latest
+gh auth status
 ```
 
-Stop the container to verify graceful deregistration:
+Generate an Organization Runner Registration Token:
 
 ```bash
-docker stop github-runner
+gh api -X POST /orgs/glauciolabs/actions/runners/registration-token --jq '.token'
+```
+
+Generate a Repository-Level Runner Registration Token:
+
+```bash
+gh api -X POST /repos/glauciolabs/drupal-app/actions/runners/registration-token --jq '.token'
 ```
 
 ---
 
-### 2. Kubernetes Deployment
+## 🐳 Local Testing via Docker
 
-#### Secrets Setup
+Build the local Docker image:
 
-Configure `kubernetes/production/secrets.yml` (encode values in Base64 or use SealedSecrets/Kustomize secretGenerator):
+```bash
+docker build -t github-runner:test -f container/Dockerfile container/
+```
+
+Run a test container locally:
+
+```bash
+# Obtain a fresh token
+TOKEN=$(gh api -X POST /orgs/glauciolabs/actions/runners/registration-token --jq '.token')
+
+docker run --rm \
+  -e GITHUB_URL="https://github.com/glauciolabs" \
+  -e RUNNER_GROUP="k8s-runners" \
+  -e RUNNER_TOKEN="$TOKEN" \
+  -e RUNNER_NAME="gcs-1" \
+  github-runner:test
+```
+
+---
+
+## ☸️ Kubernetes Deployment & Secret Management
+
+### 1. Create GHCR Image Pull Secret
+
+To allow Kubernetes to pull the runner container image from GitHub Container Registry (`ghcr.io`), create the `ghcr-secret` in the target namespace (`github-runner`):
+
+```bash
+kubectl create secret docker-registry ghcr-secret \
+  --namespace=github-runner \
+  --docker-server=ghcr.io \
+  --docker-username=glauciocampos \
+  --docker-password=YOUR_PAT_WITH_READ_PACKAGES \
+  --docker-email=your-email@domain.com
+```
+
+### 2. Configure Runner Credentials Secret
+
+Update `kubernetes/base/secrets.yml` or inject via your Secret Manager / KeyVault:
 
 ```yaml
 apiVersion: v1
 kind: Secret
 metadata:
   name: github-runner-secrets
+  namespace: github-runner
 type: Opaque
 stringData:
-  GITHUB_URL: "https://github.com/your-org"
-  RUNNER_TOKEN: "YOUR_REGISTRATION_TOKEN"
-  RUNNER_GROUP: "Default"
+  GITHUB_URL: "https://github.com/glauciolabs"
+  RUNNER_GROUP: "k8s-runners"
+  RUNNER_TOKEN: "ghp_YOUR_PERSONAL_ACCESS_TOKEN"
 ```
 
-#### Deploying to Kubernetes
-
-Apply the manifests:
+### 3. Apply Kubernetes Manifests
 
 ```bash
-kubectl apply -k kubernetes/production/
+kubectl apply -k kubernetes/base/
 ```
 
-Scale up or down gracefully:
-
-```bash
-# Scale replicas
-kubectl scale deployment github-runner --replicas=3 -n default
-```
-
-When pods are terminated or scaled down, Kubernetes sends a `SIGTERM` signal, causing the runner to cleanly unregister from GitHub before exiting.
-
----
-
-## Project Structure
-
-```text
-.
-├── container/
-│   ├── Dockerfile         # Multi-stage image build definition
-│   └── entrypoint.sh      # Signal trapping, startup registration & cleanup script
-└── kubernetes/
-    └── production/
-        ├── deployment.yml # Kubernetes Deployment manifest
-        ├── secrets.yml    # Kubernetes Secret configuration
-        └── kustomization.yml
-```
+Each runner pod will automatically register under the format `github-runner-<k8s-nodename>` (e.g. `github-runner-gcs-1`, `github-runner-h89-1`, `github-runner-gww-1`) and clean up upon termination.
