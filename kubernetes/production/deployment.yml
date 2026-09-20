@@ -14,13 +14,6 @@ spec:
     spec:
       imagePullSecrets:
       - name: ghcr-secret
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: ScheduleAnyway
-          labelSelector:
-            matchLabels:
-              app: github-runner
       hostNetwork: true
       #dnsPolicy: "None"
       #dnsConfig:

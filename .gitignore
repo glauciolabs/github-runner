@@ -1,4 +1,0 @@
-secrets.yml
-secrets.yaml
-*.secret.yaml
-kubernetes/base/secrets.yml
