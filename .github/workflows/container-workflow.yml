@@ -1,0 +1,67 @@
+name: production
+
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: "true"
+
+permissions:
+  contents: write
+  packages: write
+  security-events: write
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - test
+  workflow_dispatch:
+    inputs:
+      build_mode:
+        description: build mode
+        type: choice
+        required: true
+        default: build_and_push
+        options:
+          - build_and_push
+          - build_only
+      container_registry:
+        description: container registry
+        type: choice
+        required: true
+        default: github
+        options:
+          - dockerhub
+          - github
+      deploy:
+        description: deploy?
+        required: true
+        default: true
+        type: boolean
+      gitops_engine:
+        description: gitops engine?
+        type: choice
+        required: true
+        default: argocd
+        options:
+          - argocd
+          - fluxcd
+
+jobs:
+  pipeline:
+    uses: glauciolabs/core-pipeline/.github/workflows/core-pipeline.yml@feat/new-pipeline
+    with:
+      workflow_type: containers
+      docker_context: 'container'
+      dockerfile_path: 'container/Dockerfile'
+      docker_platforms: 'linux/amd64,linux/arm64'
+      pipeline_mode: ${{ inputs.build_mode }}
+      container_registry: ${{ inputs.container_registry }}
+      gitops_engine: ${{ inputs.gitops_engine }}
+      deploy: ${{ inputs.deploy }}
+      pipeline_mode: ${{ inputs.build_mode || 'build_and_push' }}
+      container_registry: ${{ inputs.container_registry || 'github' }}
+      gitops_engine: ${{ inputs.gitops_engine || 'argocd' }}
+      deploy: ${{ inputs.deploy || true }}
+      argocd_deployment_mode: kustomize
+      kustomization_overlay: false
+    secrets: inherit
