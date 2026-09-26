@@ -86,8 +86,9 @@ RUN wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/package
 RUN apt-get install -y python3 python3-pip python3-venv python3-dev python3-pytest python3-requests \
     python3-flake8 python3-mypy python3-bandit python3-flask python3-setuptools
 
-RUN pip3 install semgrep --break-system-packages || pip3 install semgrep
-
+RUN python3 -m venv /opt/semgrep && \
+    /opt/semgrep/bin/pip install semgrep && \
+    ln -s /opt/semgrep/bin/semgrep /usr/local/bin/semgrep
 # Install Python Poetry
 ENV POETRY_HOME="/opt/poetry"
 ENV POETRY_VENV_IN_PROJECT=true
