@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: github-runner
+  description: Self-hosted GitHub Actions runner
+  annotations:
+    github.com/project-slug: glauciolabs/github-runner
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+
