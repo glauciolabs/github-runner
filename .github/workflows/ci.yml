@@ -48,7 +48,7 @@ on:
 
 jobs:
   pipeline:
-    uses: glauciolabs/core-pipeline/.github/workflows/core-pipeline.yml@v1.0.0
+    uses: glauciolabs/core-pipeline/.github/workflows/core-pipeline.yml@develop
     with:
       workflow_type: containers
       docker_context: '.github/infra/container'
