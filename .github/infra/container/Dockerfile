@@ -48,10 +48,18 @@ RUN apt-get update && apt-get install -y curl \
     software-properties-common \
     apt-transport-https \
     golang-go \
+    unzip \
     docker.io
 
 # Install trivy
 RUN curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v$TRIVY_VERSION
+
+# Install Sonar Scanner
+ARG SONAR_SCANNER_VERSION="6.2.1.4610"
+RUN curl -o sonar-scanner.zip -L "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux-x64.zip" && \
+    unzip sonar-scanner.zip -d /opt && \
+    rm sonar-scanner.zip && \
+    ln -s /opt/sonar-scanner-${SONAR_SCANNER_VERSION}-linux-x64/bin/sonar-scanner /usr/local/bin/sonar-scanner
 
 # Install ArgoCD CLI
 
@@ -77,6 +85,8 @@ RUN wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/package
 # Install Python3
 RUN apt-get install -y python3 python3-pip python3-venv python3-dev python3-pytest python3-requests \
     python3-flake8 python3-mypy python3-bandit python3-flask python3-setuptools
+
+RUN pip3 install semgrep --break-system-packages || pip3 install semgrep
 
 # Install Python Poetry
 ENV POETRY_HOME="/opt/poetry"
