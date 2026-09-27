@@ -5,8 +5,8 @@ metadata:
   description: Self-hosted GitHub Actions runner
   annotations:
     github.com/project-slug: glauciolabs/github-runner
+  version: 0.1.0
 spec:
   type: service
   lifecycle: production
   owner: platform-team
-

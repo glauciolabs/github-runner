@@ -1,15 +1,18 @@
-FROM ubuntu:resolute-20260811.1
+#https://hub.docker.com/_/ubuntu/tags
+
+FROM ubuntu:resolute-20260912
 
 ARG TARGETOS
 ARG TARGETARCH
-ARG ACTIONS_RUNNER_VERSION="2.337.0"
-ARG TRIVY_VERSION="0.74.0"
+ARG ACTIONS_RUNNER_VERSION="2.337.0" #https://github.com/actions/runner/releases
+ARG TRIVY_VERSION="0.74.0" #https://github.com/aquasecurity/trivy/releases
 ARG NODE_VERSION="26"
 ARG DOTNET_VERSION="10"
 ARG JDK_VERSION="25"
-ARG POETRY_VERSION="2.4.1"
-ARG ARGOCD_VERSION="3.5.2"
-ARG SNYK_VERSION="v1.1307.3"
+ARG POETRY_VERSION="2.5.1" #https://github.com/python-poetry/poetry/releases
+ARG ARGOCD_VERSION="3.5.3" #https://github.com/argoproj/argo-cd/releases
+ARG SNYK_VERSION="1.1307.4" #https://github.com/snyk/cli/releases
+ARG SONAR_SCANNER_VERSION="8.1.0.6389" #https://github.com/SonarSource/sonar-scanner-cli/releases
 
 RUN apt-get update && \
     apt-get install curl tar sudo -y
@@ -54,13 +57,6 @@ RUN apt-get update && apt-get install -y curl \
 # Install trivy
 RUN curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v$TRIVY_VERSION
 
-# Install Sonar Scanner
-ARG SONAR_SCANNER_VERSION="6.2.1.4610"
-RUN curl -o sonar-scanner.zip -L "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux-x64.zip" && \
-    unzip sonar-scanner.zip -d /opt && \
-    rm sonar-scanner.zip && \
-    ln -s /opt/sonar-scanner-${SONAR_SCANNER_VERSION}-linux-x64/bin/sonar-scanner /usr/local/bin/sonar-scanner
-
 # Install ArgoCD CLI
 
 RUN curl -L -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v${ARGOCD_VERSION}/argocd-linux-${TARGETARCH} && \
@@ -71,7 +67,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
     apt-get install -y nodejs && \
     npm install --global yarn
 
-RUN npm install -g snyk@${SNYK_VERSION}
+RUN npm install -g snyk@v${SNYK_VERSION}
 
 # Install OpenJDK 25
 RUN apt-get install -y openjdk-${JDK_VERSION}-jdk maven
@@ -103,6 +99,15 @@ RUN curl -o "/usr/bin/kubectl" -LO "https://dl.k8s.io/release/$(curl -L -s https
 RUN curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor | tee /usr/share/keyrings/helm.gpg > /dev/null
 RUN echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | tee /etc/apt/sources.list.d/helm-stable-debian.list
 RUN apt-get update && apt-get install helm -y
+
+# Install Sonar Scanner
+RUN if [ "$TARGETARCH" = "arm64" ]; then ARCH="aarch64"; else ARCH="x64"; fi && \
+    DIST="sonar-scanner-${SONAR_SCANNER_VERSION}-linux-${ARCH}" && \
+    ZIPFILE="sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux-${ARCH}.zip" && \
+    curl -fSL "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/${ZIPFILE}" -o sonar-scanner.zip && \
+    unzip -o sonar-scanner.zip -d /opt && \
+    rm -f sonar-scanner.zip && \
+    ln -sf /opt/${DIST}/bin/sonar-scanner /usr/local/bin/sonar-scanner
 
 # Clean files
 RUN apt-get clean all
